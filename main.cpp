@@ -78,7 +78,7 @@ int main()
     // build and compile shaders
     // -------------------------
     // Shader shader("src/6.1.cubemaps.vs", "src/6.1.cubemaps.fs");
-    Shader skyboxShader("src/6.1.skybox.vs", "src/6.1.skybox.fs");
+    Shader skyboxShader("shaders/6.1.skybox.vs", "shaders/6.1.skybox.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
