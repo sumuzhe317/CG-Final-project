@@ -545,5 +545,5 @@ float bird_vertices[] = {
 
 float* vertices_arr[] = { nullptr, nullptr, diamond_vertices, heart_vertices, bird_vertices };
 int vertices_num[] = { 0, 0, 198 / 3, 276 / 3, 1104 / 3 };
-
+//int vertices_num[] = { 0, 0, 317 / 3, 500 / 3, 2000 / 3 };
 #endif
