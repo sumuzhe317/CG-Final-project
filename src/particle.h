@@ -8,7 +8,7 @@
 #include <vector>
 using namespace std;
 
-#define TYPE_NUM 5                          // 爆炸类型数目
+#define TYPE_NUM 7                          // 爆炸类型数目
 #define POLYGON_NUM 2                       // 形状数目
 #define POSITION_NUMBER 4                   // 拖尾粒子数量，越多拖尾越明显
 #define MAX_FIREWORK_NUMBER 20              // 最多烟花个数
@@ -17,7 +17,7 @@ using namespace std;
 enum polygon { sphere_t, cube_t };
 
 // 烟花爆炸的类型
-enum fireworktype { mudan_t, mudan_random_t, diamond_t, heart_t, bird_t };
+enum fireworktype { mudan_t, mudan_random_t, diamond_t, heart_t, bird_t, my_test, my_heart};
 
 class Particle
 {
