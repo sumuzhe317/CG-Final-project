@@ -13,6 +13,7 @@
 #include "draw.h"
 #include "firework.h"
 #include "skybox.h"
+#include <irrklang/irrKlang.h>
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -32,6 +33,7 @@ vector<Firework> firework_list;
 bool PRESS[TYPE_NUM] = { 0 };                                               // 1~5的按键状态，当前是否被按下
 bool MOUSEPRESS = false;                                                    // 鼠标左键状态
 bool MOUSEABLE = false;                                                     // 鼠标状态
+irrklang::ISoundEngine* SoundEngine;
 
 // camera
 Camera camera(glm::vec3(0.0f, 130.0f, 110.0f));
@@ -68,7 +70,8 @@ int main()
     const GLFWvidmode* mode = glfwGetVideoMode(pMonitor);
     SCR_WIDTH = mode->width / 1.2;
     SCR_HEIGHT = mode->height / 1.2;
-
+    lastX = SCR_WIDTH / 2.0f;
+    lastY = SCR_HEIGHT / 2.0f;
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "FIREWORK", NULL, NULL);
     if (window == NULL)
     {
@@ -140,6 +143,12 @@ int main()
 
     // 加载烟花图元
     Draw draw;
+
+    // 初始化音频设备
+    SoundEngine = irrklang::createIrrKlangDevice();
+    SoundEngine->play2D("resources/sound/fire.wav", GL_FALSE);
+    SoundEngine->play2D("resources/sound/boom.wav", GL_FALSE);
+    SoundEngine->stopAllSounds();
 
     // render loop
     // -----------
@@ -255,7 +264,7 @@ void processInput(GLFWwindow* window)
                 fireworktype type = fireworktype(i);
                 Firework newfirework(type);
                 firework_list.push_back(newfirework);
-                //SoundEngine->play2D("sound/1.wav", GL_FALSE);
+                SoundEngine->play2D("resources/sound/fire.wav", GL_FALSE);
             }
             PRESS[i] = true;
         }
