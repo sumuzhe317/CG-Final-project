@@ -1,7 +1,9 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include <glad/glad.h>
+// this file completes the simple shader
+
+#include <base_func.h>
 #include <glm/glm.hpp>
 
 #include <string>
