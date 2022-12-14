@@ -1,4 +1,4 @@
-#include <glad/glad.c>
+#include <base_func.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 
@@ -6,10 +6,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "shader_m.h"
 #include "camera.h"
 #include "model.h"
-
+#include "particle_system.h"
+#include "blur.h"
+#include "draw.h"
+#include "firework.h"
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -20,17 +22,25 @@ unsigned int loadTexture(const char* path);
 unsigned int loadCubemap(vector<std::string> faces);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+float NEAR = 0.1f;
+float FAR = 400.0f;
+// 烟花速度参数
+float dt = 3.0f;
+vector<Firework> firework_list;
+// 按键状态
+#define TYPE_NUM 5
+bool PRESS[TYPE_NUM] = { 0 };                                               // 1~5的按键状态，当前是否被按下
+bool MOUSEPRESS = false;                                                    // 鼠标左键状态
+bool MOUSEABLE = false;                                                     // 鼠标状态
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 130.0f, 110.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 // timing
-float deltaTime = 0.0f;
+float deltaTime = 0.1f;
 float lastFrame = 0.0f;
 
 // lighting
@@ -44,6 +54,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -51,13 +62,21 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+
+    // 根据设备信息设置屏幕宽高
+    GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(pMonitor);
+    SCR_WIDTH = mode->width / 1.2;
+    SCR_HEIGHT = mode->height / 1.2;
+
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "FIREWORK", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
@@ -78,12 +97,24 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
+
     // build and compile our shader zprogram
     // ------------------------------------
     Shader skyboxShader("shaders/6.1.skybox.vs", "shaders/6.1.skybox.fs");
     Shader lightingShader("shaders/5.2.light_casters.vs", "shaders/5.2.light_casters.fs");
     Shader lightCubeShader("shaders/6.light_cube.vs", "shaders/6.light_cube.fs");
+    Shader ColorShader("shaders/Color.vs", "shaders/Color.fs");
+    Shader BlurShader("shaders/Result.vs", "shaders/Blur.fs");
+    Shader ResultShader("shaders/Result.vs", "shaders/Result.fs");
 
+    // set up the particle_system
+    // ------------------------------------------------------------------
+    /*
+    ParticleSystem m_particleSystem("shaders/ps_update.vs","shaders/ps_update.fs","shaders/ps_update.gs");
+    vec3 ParticleSystemPos = vec3(0.0f, 0.0f, 1.0f);
+    m_particleSystem.InitParticleSystem(ParticleSystemPos);
+    double m_currentTimeMillis = glfwGetTime();
+    */
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float skyboxVertices[] = {
@@ -255,13 +286,19 @@ int main()
     skyboxShader.setInt("skybox", 0);
     //////////////////////////////////////////////////////////////////////////////////////////
 
+    // 辉光效果初始化
+    Blur blur;
+
+    // 加载烟花图元
+    Draw draw;
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
         // per-frame time logic
         // --------------------
-        float currentFrame = static_cast<float>(glfwGetTime());
+        float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -269,10 +306,40 @@ int main()
         // -----
         processInput(window);
 
+
         // render
         // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // firework
+        // 背景颜色
+        blur.bindFrameBuffer();
+
+        // 设置烟花着色器
+        ColorShader.use();
+        // 视角变换、投影变换
+        // 世界变换交给draw_firework函数
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, NEAR, FAR);
+        ColorShader.setMat4("view", view);
+        ColorShader.setMat4("projection", projection);
+        // 渲染烟花，应用烟花引擎
+        for (vector<Firework>::iterator firework_it = firework_list.begin(); firework_it != firework_list.end();)
+        {
+            draw.draw_firework(firework_it, ColorShader);
+            firework_it->move(dt * deltaTime);
+            // 判定是否爆炸及是否寿命结束
+            if (firework_it->isExploded() && firework_it->getParticleAliveNum() <= 0)
+            {
+                firework_it = firework_list.erase(firework_it);
+                std::cout << "Delete a firework." << std::endl;
+            }
+            else
+            {
+                firework_it++;
+            }
+        }
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
@@ -291,8 +358,8 @@ int main()
         lightingShader.setFloat("material.shininess", 32.0f);
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
 
@@ -334,6 +401,18 @@ int main()
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+
+        // draw the particle
+        /////////////////////////////////////////////////////////////////////////////////
+        /*
+        m_particleSystem.m_updateTechnique.use();
+        double TimeNowMillis = glfwGetTime();
+        unsigned int DeltaTimeMillis = (unsigned int)((TimeNowMillis - m_currentTimeMillis)*1000);
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+        m_particleSystem.m_updateTechnique.setMat4("view", view);
+        m_particleSystem.m_updateTechnique.setMat4("projection", projection);
+        m_particleSystem.Render(500,camera.Position);
+        */
         //////////////////////////////////////////////////////////////////////////////////////////
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
@@ -350,6 +429,8 @@ int main()
         glDepthFunc(GL_LESS); // set depth function back to default
         //////////////////////////////////////////////////////////////////////////////////////////
 
+        // 后处理：辉光效果
+        blur.blurTheFrame(BlurShader, ResultShader);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -370,11 +451,69 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow* window)
+/*void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+}*/
+// 判断按键并执行相应动作
+void processInput(GLFWwindow* window)
+{
+    // ESC 退出
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+    // 数字1开始 发射不同烟花类型
+    for (int i = 0; i < TYPE_NUM; i++)
+    {
+        if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_PRESS)
+        {
+            // 只有按键按下瞬间会发射烟花(松开->按下)
+            if (!PRESS[i] && firework_list.size() < MAX_FIREWORK_NUMBER)
+            {
+                fireworktype type = fireworktype(i);
+                Firework newfirework(type);
+                firework_list.push_back(newfirework);
+                //SoundEngine->play2D("sound/1.wav", GL_FALSE);
+            }
+            PRESS[i] = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_RELEASE)
+            PRESS[i] = false;
+    }
+    // E Q 调整烟花速度
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        dt = (dt + 0.01f) > 4.0f ? 4.0f : (dt + 0.01f);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        dt = (dt - 0.01f) < 2.0f ? 2.0f : (dt - 0.01f);
+    // 鼠标点击
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && MOUSEPRESS == false)
+    {
+        if (MOUSEABLE)
+        {
+            glfwSetCursorPosCallback(window, mouse_callback);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            MOUSEABLE = false;
+        }
+        else
+        {
+            firstMouse = true;
+            glfwSetCursorPosCallback(window, NULL);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            MOUSEABLE = true;
+        }
+        MOUSEPRESS = true;
+    }
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+        MOUSEPRESS = false;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
