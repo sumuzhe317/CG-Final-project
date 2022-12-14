@@ -28,7 +28,6 @@ float FAR = 400.0f;
 float dt = 3.0f;
 vector<Firework> firework_list;
 // 按键状态
-#define TYPE_NUM 5
 bool PRESS[TYPE_NUM] = { 0 };                                               // 1~5的按键状态，当前是否被按下
 bool MOUSEPRESS = false;                                                    // 鼠标左键状态
 bool MOUSEABLE = false;                                                     // 鼠标状态
