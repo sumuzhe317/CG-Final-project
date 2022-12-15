@@ -36,14 +36,14 @@
 
 库目录包含该project的lib文件夹
 
-依赖项添加opengl32.lib和glfw3.lib即可
+依赖项添加opengl32.lib和glfw3.lib以及irrKlang.lib即可
 
-![image-20221214120137845](imags/image-20221214120137845.png)
+![image-20221215090918405](imags/image-20221215090918405.png)
 
 **release 和 debug都在x64下运行，两个都需要设置一遍。**
 
-ctrl+f5运行，然后这时候，把代码里的resources和shaders复制出来到项目下即可
+ctrl+f5运行，然后这时候，把代码里的resources和shaders和三个dll复制出来到项目下即可
 
-![image-20221207171634631](imags/image-20221207171634631.png)
+![image-20221215090937712](imags/image-20221215090937712.png)
 
 如有问题，欢迎联系：1051655293@qq.com
