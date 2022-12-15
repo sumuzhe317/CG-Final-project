@@ -22,17 +22,18 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 unsigned int loadTexture(const char* path);
 unsigned int loadCubemap(vector<std::string> faces);
+void set_point_light(Shader& blinnphongshader);
 
 // settings
 float NEAR = 0.1f;
 float FAR = 400.0f;
-// ÑÌ»¨ËÙ¶È²ÎÊý
+// ï¿½Ì»ï¿½ï¿½Ù¶È²ï¿½ï¿½ï¿½
 float dt = 3.0f;
 vector<Firework> firework_list;
-// °´¼ü×´Ì¬
-bool PRESS[TYPE_NUM] = { 0 };                                               // 1~5µÄ°´¼ü×´Ì¬£¬µ±Ç°ÊÇ·ñ±»°´ÏÂ
-bool MOUSEPRESS = false;                                                    // Êó±ê×ó¼ü×´Ì¬
-bool MOUSEABLE = false;                                                     // Êó±ê×´Ì¬
+// ï¿½ï¿½ï¿½ï¿½×´Ì¬
+bool PRESS[TYPE_NUM] = { 0 };                                               // 1~5ï¿½Ä°ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Ç·ñ±»°ï¿½ï¿½ï¿½
+bool MOUSEPRESS = false;                                                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
+bool MOUSEABLE = false;                                                     // ï¿½ï¿½ï¿½×´Ì¬
 irrklang::ISoundEngine* SoundEngine;
 
 // camera
@@ -65,7 +66,7 @@ int main()
     // glfw window creation
     // --------------------
 
-    // ¸ù¾ÝÉè±¸ÐÅÏ¢ÉèÖÃÆÁÄ»¿í¸ß
+    // ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½
     GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(pMonitor);
     SCR_WIDTH = mode->width / 1.2;
@@ -109,6 +110,7 @@ int main()
     Shader ColorShader("shaders/Color.vs", "shaders/Color.fs");
     Shader BlurShader("shaders/Result.vs", "shaders/Blur.fs");
     Shader ResultShader("shaders/Result.vs", "shaders/Result.fs");
+    Shader CastleShader("shader/Blinn_Phong.vs", "shader/Blinn_Phong.fs");
 
     // set up the particle_system
     // ------------------------------------------------------------------
@@ -119,9 +121,6 @@ int main()
     double m_currentTimeMillis = glfwGetTime();
     */
 
-    // load textures
-    // -------------
-    unsigned int cubeTexture = loadTexture("resources/textures/container.jpg");
 
     vector<std::string> faces
     {
@@ -134,17 +133,20 @@ int main()
     };
     unsigned int cubemapTexture = loadCubemap(faces);
 
-    skyboxShader.use();
-    skyboxShader.setInt("skybox", 0);
+    
     //////////////////////////////////////////////////////////////////////////////////////////
-
-    // »Ô¹âÐ§¹û³õÊ¼»¯
+    
+    // ï¿½Ô¹ï¿½Ð§ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½
     Blur blur;
 
-    // ¼ÓÔØÑÌ»¨Í¼Ôª
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ì»ï¿½Í¼Ôª
     Draw draw;
 
-    // ³õÊ¼»¯ÒôÆµÉè±¸
+    Skybox skybox;
+
+    // åŠ è½½åŸŽå ¡æ¨¡åž‹
+    Model castle("resources/Castle/Castle OBJ2.obj");
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Æµï¿½è±¸
     SoundEngine = irrklang::createIrrKlangDevice();
     SoundEngine->play2D("resources/sound/fire.wav", GL_FALSE);
     SoundEngine->play2D("resources/sound/boom.wav", GL_FALSE);
@@ -171,23 +173,23 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // firework
-        // ±³¾°ÑÕÉ«
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
         blur.bindFrameBuffer();
 
-        // ÉèÖÃÑÌ»¨×ÅÉ«Æ÷
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ì»ï¿½ï¿½ï¿½É«ï¿½ï¿½
         ColorShader.use();
-        // ÊÓ½Ç±ä»»¡¢Í¶Ó°±ä»»
-        // ÊÀ½ç±ä»»½»¸ødraw_fireworkº¯Êý
+        // ï¿½Ó½Ç±ä»»ï¿½ï¿½Í¶Ó°ï¿½ä»»
+        // ï¿½ï¿½ï¿½ï¿½ä»»ï¿½ï¿½ï¿½ï¿½draw_fireworkï¿½ï¿½ï¿½ï¿½
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, NEAR, FAR);
         ColorShader.setMat4("view", view);
         ColorShader.setMat4("projection", projection);
-        // äÖÈ¾ÑÌ»¨£¬Ó¦ÓÃÑÌ»¨ÒýÇæ
+        // ï¿½ï¿½È¾ï¿½Ì»ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½Ì»ï¿½ï¿½ï¿½ï¿½ï¿½
         for (vector<Firework>::iterator firework_it = firework_list.begin(); firework_it != firework_list.end();)
         {
             draw.draw_firework(firework_it, ColorShader);
             firework_it->move(dt * deltaTime);
-            // ÅÐ¶¨ÊÇ·ñ±¬Õ¨¼°ÊÇ·ñÊÙÃü½áÊø
+            // ï¿½Ð¶ï¿½ï¿½Ç·ï¿½Õ¨ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (firework_it->isExploded() && firework_it->getParticleAliveNum() <= 0)
             {
                 firework_it = firework_list.erase(firework_it);
@@ -199,6 +201,19 @@ int main()
             }
         }
 
+        // è®¾ç½®åŸŽå ¡ç€è‰²å™¨
+        CastleShader.use();
+        // MVPå˜æ¢
+        CastleShader.setMat4("view", view);
+        CastleShader.setMat4("projection", projection);
+        glm::mat4 castleTransform = glm::mat4(1.0f);
+        castleTransform = glm::scale(castleTransform, glm::vec3(5.0f));
+        castleTransform = glm::rotate(castleTransform, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        CastleShader.setMat4("model", castleTransform);
+        // ä¼ é€’ç‚¹å…‰æºç»™ç€è‰²å™¨
+        set_point_light(CastleShader);
+        // æ¸²æŸ“åŸŽå ¡æ¨¡åž‹
+        castle.Draw(CastleShader);
         // draw the particle
         /////////////////////////////////////////////////////////////////////////////////
         /*
@@ -212,12 +227,14 @@ int main()
         */
         //////////////////////////////////////////////////////////////////////////////////////////
         // draw skybox as last
-        Skybox skybox;
+        skyboxShader.use();
+        skyboxShader.setInt("skybox", 0);
+        
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
         skybox.render(view, projection, cubemapTexture, skyboxShader);
         //////////////////////////////////////////////////////////////////////////////////////////
 
-        // ºó´¦Àí£º»Ô¹âÐ§¹û
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¹ï¿½Ð§ï¿½ï¿½
         blur.blurTheFrame(BlurShader, ResultShader);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -247,18 +264,18 @@ int main()
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 }*/
-// ÅÐ¶Ï°´¼ü²¢Ö´ÐÐÏàÓ¦¶¯×÷
+// ï¿½Ð¶Ï°ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½
 void processInput(GLFWwindow* window)
 {
-    // ESC ÍË³ö
+    // ESC ï¿½Ë³ï¿½
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    // Êý×Ö1¿ªÊ¼ ·¢Éä²»Í¬ÑÌ»¨ÀàÐÍ
+    // ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½Ê¼ ï¿½ï¿½ï¿½ä²»Í¬ï¿½Ì»ï¿½ï¿½ï¿½ï¿½ï¿½
     for (int i = 0; i < TYPE_NUM; i++)
     {
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_PRESS)
         {
-            // Ö»ÓÐ°´¼ü°´ÏÂË²¼ä»á·¢ÉäÑÌ»¨(ËÉ¿ª->°´ÏÂ)
+            // Ö»ï¿½Ð°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½á·¢ï¿½ï¿½ï¿½Ì»ï¿½(ï¿½É¿ï¿½->ï¿½ï¿½ï¿½ï¿½)
             if (!PRESS[i] && firework_list.size() < MAX_FIREWORK_NUMBER)
             {
                 fireworktype type = fireworktype(i);
@@ -271,12 +288,12 @@ void processInput(GLFWwindow* window)
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_RELEASE)
             PRESS[i] = false;
     }
-    // E Q µ÷ÕûÑÌ»¨ËÙ¶È
+    // E Q ï¿½ï¿½ï¿½ï¿½ï¿½Ì»ï¿½ï¿½Ù¶ï¿½
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         dt = (dt + 0.01f) > 4.0f ? 4.0f : (dt + 0.01f);
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         dt = (dt - 0.01f) < 2.0f ? 2.0f : (dt - 0.01f);
-    // Êó±êµã»÷
+    // ï¿½ï¿½ï¿½ï¿½ï¿½
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && MOUSEPRESS == false)
     {
         if (MOUSEABLE)
@@ -421,4 +438,24 @@ unsigned int loadCubemap(vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
+}
+void set_point_light(Shader& blinnphongshader)
+{
+    int count = 0;
+    string struct_string = "light_list[";
+    string color_string = "].Color";
+    string pos_string = "].Position";
+    string intensity_string = "].intensity";
+    for (int i = 0; i < firework_list.size(); i++)
+    {
+        if (firework_list[i].isExploded() && firework_list[i].getLightLife() > 0)
+        {
+            Firework* ptr = &firework_list[i];
+            blinnphongshader.setVec3(struct_string + to_string(count) + color_string, ptr->getLightColor());
+            blinnphongshader.setVec3(struct_string + to_string(count) + pos_string, ptr->getPosition());
+            blinnphongshader.setFloat(struct_string + to_string(count) + intensity_string, ptr->getLightIntensity());
+            count++;
+        }
+    }
+    blinnphongshader.setInt("num_lights", count);
 }
