@@ -38,17 +38,15 @@
 
 依赖项添加opengl32.lib，glfw3.lib，irrKlang.lib和assimp-vc140-mt.lib即可
 
-![微信截图_20221216015629](C:\Users\86185\Desktop\CGFinal\CG-Final-project\imags\微信截图_20221216015629.png)
+![image-20221217102645080](imags/image-20221217102645080.png)
 
 
 
 **release 和 debug都在x64下运行，两个都需要设置一遍。**
 
-ctrl+f5运行，然后这时候，把代码里的resources和shaders和四个dll复制出来到项目下即可
+ctrl+f5运行，然后这时候，把代码里的resources和shaders和几个dll复制出来到项目下即可（包括zip.dll）
 
-
-
-![微信截图_20221216015710](C:\Users\86185\Desktop\CGFinal\CG-Final-project\imags\微信截图_20221216015710.png)
+![image-20221217102715343](imags/image-20221217102715343.png)
 
 
 

@@ -37,7 +37,8 @@ bool MOUSEABLE = false;                                                     // �
 irrklang::ISoundEngine* SoundEngine;
 
 // camera
-Camera camera(glm::vec3(0.0f, 130.0f, 110.0f));
+//Camera camera(glm::vec3(0.0f, 130.0f, 110.0f));
+Camera camera(glm::vec3(0.0f, 1300.f, 110.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -110,7 +111,7 @@ int main()
     Shader ColorShader("shaders/Color.vs", "shaders/Color.fs");
     Shader BlurShader("shaders/Result.vs", "shaders/Blur.fs");
     Shader ResultShader("shaders/Result.vs", "shaders/Result.fs");
-    Shader CastleShader("shader/Blinn_Phong.vs", "shader/Blinn_Phong.fs");
+    Shader CastleShader("shaders/Blinn_Phong.vs", "shaders/Blinn_Phong.fs");
 
     // set up the particle_system
     // ------------------------------------------------------------------
@@ -145,7 +146,7 @@ int main()
     Skybox skybox;
 
     // 加载城堡模型
-    Model castle("resources/Castle/Castle OBJ2.obj");
+    Model castle("resources/Castle/10062_ChinaBuddhistTemple_v4.obj");
     // ��ʼ����Ƶ�豸
     SoundEngine = irrklang::createIrrKlangDevice();
     SoundEngine->play2D("resources/sound/fire.wav", GL_FALSE);
