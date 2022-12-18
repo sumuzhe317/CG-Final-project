@@ -37,7 +37,7 @@ bool MOUSEABLE = false;                                                     // �
 irrklang::ISoundEngine* SoundEngine;
 
 // camera
-Camera camera(glm::vec3(0.0f, 130.0f, 110.0f));
+Camera camera(glm::vec3(0.0f, 130.0f, -15.0f));
 //Camera camera(glm::vec3(0.0f, 1300.f, 110.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -67,7 +67,7 @@ int main()
     // glfw window creation
     // --------------------
 
-    // �����豸��Ϣ������Ļ���
+    // 加载烟花图元
     GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(pMonitor);
     SCR_WIDTH = mode->width / 1.2;
@@ -100,19 +100,20 @@ int main()
 
     // configure global opengl state
     // -----------------------------
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
 
 
     // build and compile our shader zprogram
     // ------------------------------------
     Shader skyboxShader("shaders/6.1.skybox.vs", "shaders/6.1.skybox.fs");
-    Shader lightingShader("shaders/5.2.light_casters.vs", "shaders/5.2.light_casters.fs");
-    Shader lightCubeShader("shaders/6.light_cube.vs", "shaders/6.light_cube.fs");
+    //Shader lightingShader("shaders/5.2.light_casters.vs", "shaders/5.2.light_casters.fs");
+    //Shader lightCubeShader("shaders/6.light_cube.vs", "shaders/6.light_cube.fs");
     Shader ColorShader("shaders/Color.vs", "shaders/Color.fs");
     Shader BlurShader("shaders/Result.vs", "shaders/Blur.fs");
     Shader ResultShader("shaders/Result.vs", "shaders/Result.fs");
     Shader CastleShader("shaders/Blinn_Phong.vs", "shaders/Blinn_Phong.fs");
 
+    glEnable(GL_DEPTH_TEST);
     // set up the particle_system
     // ------------------------------------------------------------------
     /*
@@ -137,17 +138,19 @@ int main()
     
     //////////////////////////////////////////////////////////////////////////////////////////
     
-    // �Թ�Ч����ʼ��
+    // 辉光效果初始化
     Blur blur;
 
-    // �����̻�ͼԪ
+    // 加载烟花图元
     Draw draw;
 
     Skybox skybox;
 
     // 加载城堡模型
-    Model castle("resources/Castle/10062_ChinaBuddhistTemple_v4.obj");
-    // ��ʼ����Ƶ�豸
+    //Model castle("resources/Castle/10062_ChinaBuddhistTemple_v4.obj");
+    //Model castle("resources/Castle/Castle OBJ.obj");
+    Model castle("resources/Japanese_Temple_Model/Japanese_Temple.obj");
+    // 初始化音频设备
     SoundEngine = irrklang::createIrrKlangDevice();
     SoundEngine->play2D("resources/sound/fire.wav", GL_FALSE);
     SoundEngine->play2D("resources/sound/boom.wav", GL_FALSE);
@@ -174,23 +177,23 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // firework
-        // ������ɫ
+        // 背景颜色
         blur.bindFrameBuffer();
 
-        // �����̻���ɫ��
+        // 设置烟花着色器
         ColorShader.use();
-        // �ӽǱ任��ͶӰ�任
-        // ����任����draw_firework����
+        // 视角变换、投影变换
+        // 世界变换交给draw_firework函数
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, NEAR, FAR);
         ColorShader.setMat4("view", view);
         ColorShader.setMat4("projection", projection);
-        // ��Ⱦ�̻���Ӧ���̻�����
+        // 渲染烟花，应用烟花引擎
         for (vector<Firework>::iterator firework_it = firework_list.begin(); firework_it != firework_list.end();)
         {
             draw.draw_firework(firework_it, ColorShader);
             firework_it->move(dt * deltaTime);
-            // �ж��Ƿ�ը���Ƿ���������
+            // 渲染烟花，应用烟花引擎
             if (firework_it->isExploded() && firework_it->getParticleAliveNum() <= 0)
             {
                 firework_it = firework_list.erase(firework_it);
@@ -230,12 +233,11 @@ int main()
         // draw skybox as last
         skyboxShader.use();
         skyboxShader.setInt("skybox", 0);
-        
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
         skybox.render(view, projection, cubemapTexture, skyboxShader);
         //////////////////////////////////////////////////////////////////////////////////////////
 
-        // ������Թ�Ч��
+        // 后处理：辉光效果
         blur.blurTheFrame(BlurShader, ResultShader);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -268,15 +270,15 @@ int main()
 // �жϰ�����ִ����Ӧ����
 void processInput(GLFWwindow* window)
 {
-    // ESC �˳�
+    // ESC 退出
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    // ����1��ʼ ���䲻ͬ�̻�����
+    // 数字1开始 发射不同烟花类型
     for (int i = 0; i < TYPE_NUM; i++)
     {
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_PRESS)
         {
-            // ֻ�а�������˲��ᷢ���̻�(�ɿ�->����)
+            // 只有按键按下瞬间会发射烟花(松开->按下)
             if (!PRESS[i] && firework_list.size() < MAX_FIREWORK_NUMBER)
             {
                 fireworktype type = fireworktype(i);
@@ -289,12 +291,12 @@ void processInput(GLFWwindow* window)
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_RELEASE)
             PRESS[i] = false;
     }
-    // E Q �����̻��ٶ�
+    // E Q 调整烟花速度
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         dt = (dt + 0.01f) > 4.0f ? 4.0f : (dt + 0.01f);
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         dt = (dt - 0.01f) < 2.0f ? 2.0f : (dt - 0.01f);
-    // �����
+    // 鼠标点击
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && MOUSEPRESS == false)
     {
         if (MOUSEABLE)

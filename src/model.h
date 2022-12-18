@@ -1,9 +1,10 @@
-#pragma once
+#ifndef MODEL_H
+#define MODEL_H
 #include <glad/glad.h>                 //所有头文件 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION        //原作者没写
-#include <stb_image.h>
+#include "stb_image.h"
 #include <assimp/Importer.hpp>        //assimp库头文件
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -185,7 +186,8 @@ private:
 			if (!skip)
 			{   // 如果尚未加载纹理，请加载它
 				Texture texture;
-				texture.id = TextureFromFile(str.C_Str(), this->directory);
+				//texture.id = TextureFromFile(str.C_Str(), this->directory);
+				texture.id = TextureFromFile("Japanese_Temple_Paint2_Japanese_Shrine_Mat_AlbedoTransparency.png", this->directory);
 				texture.type = typeName;
 				texture.path = str.C_Str();
 				textures.push_back(texture);
@@ -200,7 +202,7 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 {
 	string filename = string(path);
 	filename = directory + '/' + filename;
-
+	// std::cout << filename << std::endl;
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 
@@ -229,8 +231,10 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 	}
 	else
 	{
-		std::cout << "纹理无法从此路径加载: " << path << std::endl;
+		//std::cout << "纹理无法从此路径加载: " << path << std::endl;
+		std::cout << "abc: " << path << std::endl;
 		stbi_image_free(data);
 	}
 	return textureID;
 }
+#endif

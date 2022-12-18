@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include "shader.h"
+
 using namespace std;
 
 class Skybox
