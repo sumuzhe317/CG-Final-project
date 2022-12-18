@@ -1,58 +1,36 @@
-// Blur：进行辉光处理
-
-#ifndef __SHADING_H__
-#define __SHADING_H__
+#include "base_func.h"
+#include"bloom.h"
+#include<iostream>
+using namespace std;
 
 // 窗口大小
 unsigned int SCR_WIDTH = 1440;
 unsigned int SCR_HEIGHT = 900;
 
-class Blur
-{
-public:
-    Blur();
-    ~Blur();
-    // 其他渲染需要先调用此函数，在类的帧缓冲中渲染方便后续处理
-    void bindFrameBuffer();
-    // 辉光后处理
-    void blurTheFrame(Shader& BlurShader, Shader& ResultShader);
-private:
-    GLuint framebuffer;
-    GLuint texColorBuffer[2];
-    GLuint BlurFBO[2];
-    GLuint BlurColorbuffers[2];
-    GLuint VAO, VBO, EBO, RBO;
-    void init_rectangle();
-    void init_framebuffer();
-    void init_Blur();
-    void BlurShading(Shader& BlurShader);
-    void ResultShading(Shader& BlurShader);
-};
-
-//初始化
-Blur::Blur()
+//initialize
+Bloom::Bloom()
 {
     init_framebuffer();
-    init_Blur();
+    init_Bloom();
     init_rectangle();
 }
 
-Blur::~Blur()
+Bloom::~Bloom()
 {
     glDeleteFramebuffers(1, &framebuffer);
     glDeleteTextures(2, texColorBuffer);
     glDeleteRenderbuffers(1, &RBO);
 
-    glDeleteFramebuffers(2, BlurFBO);
-    glDeleteTextures(2, BlurColorbuffers);
+    glDeleteFramebuffers(2, BloomFBO);
+    glDeleteTextures(2, BloomColorbuffers);
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
 }
 
-// 将所有的渲染结果先渲染到缓冲区中
-void Blur::bindFrameBuffer()
+// put the draw result to frame buffer
+void Bloom::bindFrameBuffer()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -60,9 +38,9 @@ void Blur::bindFrameBuffer()
 }
 
 // 经过处理最后再将结果渲染到屏幕上
-void Blur::blurTheFrame(Shader& BlurShader, Shader& ResultShader)
+void Bloom::BloomDraw(Shader& BloomShader, Shader& ResultShader)
 {
-    BlurShading(BlurShader);
+    BloomShading(BloomShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -70,7 +48,7 @@ void Blur::blurTheFrame(Shader& BlurShader, Shader& ResultShader)
 }
 
 // 初始化帧缓冲
-void Blur::init_framebuffer()
+void Bloom::init_framebuffer()
 {
     // 生成FBO，对其绑定两个颜色缓冲，一个是原图，一个是提取的需要模糊的亮部
     glGenFramebuffers(1, &framebuffer);
@@ -102,22 +80,22 @@ void Blur::init_framebuffer()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-// Blur缓冲初始化
-void Blur::init_Blur()
+// Bloom缓冲初始化
+void Bloom::init_Bloom()
 {
     // 生成两个FBO，用于 水平和垂直两方向 多次模糊
-    glGenFramebuffers(2, BlurFBO);
-    glGenTextures(2, BlurColorbuffers);
+    glGenFramebuffers(2, BloomFBO);
+    glGenTextures(2, BloomColorbuffers);
     for (unsigned int i = 0; i < 2; i++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, BlurFBO[i]);
-        glBindTexture(GL_TEXTURE_2D, BlurColorbuffers[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, BloomFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, BloomColorbuffers[i]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, BlurColorbuffers[i], 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, BloomColorbuffers[i], 0);
         // also check if framebuffers are complete (no need for depth buffer)
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "Framebuffer not complete!" << std::endl;
@@ -125,7 +103,7 @@ void Blur::init_Blur()
 }
 
 // 将帧缓冲渲染到屏幕上的矩形初始化
-void Blur::init_rectangle()
+void Bloom::init_rectangle()
 {
     float vertices[] = {
         // positions     // texture coords
@@ -159,7 +137,7 @@ void Blur::init_rectangle()
     glBindVertexArray(0);
 }
 
-void Blur::BlurShading(Shader& BlurShader)
+void Bloom::BloomShading(Shader& BloomShader)
 {
     // 将提取的亮部作为输入纹理，高斯模糊本是二维的模糊，可分解为两次一维模糊，以下实现是轮流进行五次水平模糊和垂直模糊。
     GLuint input_texture = texColorBuffer[1];
@@ -167,18 +145,18 @@ void Blur::BlurShading(Shader& BlurShader)
     bool horizontal = true, first_iteration = true;
     unsigned int amount = 10;
     // 激活texture0，用于绑定输入，下面setInt("image", 0) 的0的来源
-    BlurShader.use();
+    BloomShader.use();
     glActiveTexture(GL_TEXTURE0);
 
     // 以先水平模糊后垂直模糊的顺序进行模糊
     for (unsigned int i = 0; i < amount; i++)
     {
         // 每次绑定horizontal对应的FBO作为输出，并设置相应模糊方式
-        glBindFramebuffer(GL_FRAMEBUFFER, BlurFBO[horizontal]);
-        BlurShader.setInt("horizontal", horizontal);
+        glBindFramebuffer(GL_FRAMEBUFFER, BloomFBO[horizontal]);
+        BloomShader.setInt("horizontal", horizontal);
         // 第一次绑定input_texture作为输入，之后以!horizontal的纹理作为输入
-        glBindTexture(GL_TEXTURE_2D, first_iteration ? input_texture : BlurColorbuffers[!horizontal]);
-        BlurShader.setInt("image", 0);
+        glBindTexture(GL_TEXTURE_2D, first_iteration ? input_texture : BloomColorbuffers[!horizontal]);
+        BloomShader.setInt("image", 0);
         // 切换模糊方式
         horizontal = !horizontal;
         if (first_iteration)
@@ -190,11 +168,11 @@ void Blur::BlurShading(Shader& BlurShader)
     }
 }
 
-void Blur::ResultShading(Shader& ResultShader)
+void Bloom::ResultShading(Shader& ResultShader)
 {
     // 输入两个纹理，一个是渲染原图，一个是模糊后图象
     GLuint tex1 = texColorBuffer[0];
-    GLuint tex2 = BlurColorbuffers[0];
+    GLuint tex2 = BloomColorbuffers[0];
     // 分别绑定到GL_TEXTURE0、GL_TEXTURE1上用于输入
     ResultShader.use();
     glActiveTexture(GL_TEXTURE0);
@@ -202,11 +180,9 @@ void Blur::ResultShading(Shader& ResultShader)
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, tex2);
     ResultShader.setInt("screenTexture", 0);
-    ResultShader.setInt("BlurTexture", 1);
+    ResultShader.setInt("BloomTexture", 1);
     // 画矩形框
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
-
-#endif

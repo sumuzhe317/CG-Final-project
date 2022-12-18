@@ -8,8 +8,8 @@
 #include <assimp/Importer.hpp>        //assimp库头文件
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "Mesh.h"
-#include "Shader.h"
+#include "mesh.h"
+#include "shader.h"
 
 #include <string>
 #include <fstream>

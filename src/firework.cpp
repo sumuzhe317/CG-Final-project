@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "sound.h"
 #include <irrklang/irrKlang.h>
 // const GLfloat Firework::GRAVITY = -0.25f;
 const GLfloat Firework::GRAVITY = -9.8f;
@@ -12,7 +13,6 @@ const GLfloat Firework::radiusScale = 250.0f;
 const GLfloat Firework::velocityScale = 80.0f;
 const GLfloat Firework::explodeScale = 80.0f;
 
-extern irrklang::ISoundEngine* SoundEngine;
 
 Firework::Firework(fireworktype ftype)
 {
@@ -89,7 +89,7 @@ void Firework::move(float dt)
         // 更新后若y方向速度为小于0，爆炸产生粒子
         if (velocity.y <= 0.0f)
         {
-            SoundEngine->play2D("resources/sound/boom.wav", GL_FALSE);
+            sound::boom();
             velocity.y = 0;
             velocity *= 0.3;
             hasExploded = true;

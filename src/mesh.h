@@ -2,7 +2,7 @@
 #include <glad/glad.h> // 所有头文件
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "Shader.h"
+#include "shader.h"
 #include <string>
 #include <fstream>
 #include <sstream>
