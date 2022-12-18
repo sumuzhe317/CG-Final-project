@@ -29,7 +29,8 @@ void set_point_light(Shader& blinnphongshader);
 float time_scale = 3.0f;
 vector<Firework> firework_list;
 // use to indentify the press button
-bool PRESS[TYPE_NUM] = { 0 };                                               // whether the 1~5 button is pressed
+bool PRESS[TYPE_NUM] = { 0 };                                               // whether the 1~7 button is pressed
+bool PRESS_CHAR[CHAR_TYPE_NUM] = { 0 };                                               // whether the char button is pressed
 bool MOUSEPRESS = false;                                                    // whether press
 bool MOUSEABLE = false;                                                     // whether enable
 
@@ -113,7 +114,7 @@ int main()
 
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader skyboxShader("shaders/6.1.skybox.vs", "shaders/6.1.skybox.fs");
+    Shader skyboxShader("shaders/skybox.vs", "shaders/skybox.fs");
     //Shader lightingShader("shaders/5.2.light_casters.vs", "shaders/5.2.light_casters.fs");
     //Shader lightCubeShader("shaders/6.light_cube.vs", "shaders/6.light_cube.fs");
     Shader ColorShader("shaders/Color.vs", "shaders/Color.fs");
@@ -125,17 +126,6 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
-    // set up the particle_system
-    // ------------------------------------------------------------------
-    /*
-    ParticleSystem m_particleSystem("shaders/ps_update.vs","shaders/ps_update.fs","shaders/ps_update.gs");
-    vec3 ParticleSystemPos = vec3(0.0f, 0.0f, 1.0f);
-    m_particleSystem.InitParticleSystem(ParticleSystemPos);
-    double m_currentTimeMillis = glfwGetTime();
-    */
-
-
-
     unsigned int cubemapTexture = loadCubemap(faces);
 
     
@@ -145,7 +135,7 @@ int main()
     Bloom bloom;
 
     // 加载烟花图元
-    ParticleSystem draw;
+    ParticleSystem particle_system;
 
     Skybox skybox;
 
@@ -189,7 +179,7 @@ int main()
         // draw the firework
         for (vector<Firework>::iterator firework_it = firework_list.begin(); firework_it != firework_list.end();)
         {
-            draw.draw_firework(firework_it, ColorShader);
+            particle_system.draw_firework(firework_it, ColorShader);
             firework_it->move(time_scale * deltaTime);
             // exploded and dead
             if (firework_it->isExploded() && firework_it->getParticleAliveNum() <= 0)
@@ -216,20 +206,6 @@ int main()
         set_point_light(FloorShader);
         // draw the floor
         floor.Draw(FloorShader);
-
-        // the below will be deleted
-        // draw the particle
-        /////////////////////////////////////////////////////////////////////////////////
-        /*
-        m_particleSystem.m_updateTechnique.use();
-        double TimeNowMillis = glfwGetTime();
-        unsigned int DeltaTimeMillis = (unsigned int)((TimeNowMillis - m_currentTimeMillis)*1000);
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
-        m_particleSystem.m_updateTechnique.setMat4("view", view);
-        m_particleSystem.m_updateTechnique.setMat4("projection", projection);
-        m_particleSystem.Render(500,camera.Position);
-        */
-        //////////////////////////////////////////////////////////////////////////////////////////
         
         // draw skybox as last
         skyboxShader.use();
@@ -259,7 +235,7 @@ void processInput(GLFWwindow* window)
     // ESC 退出
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    // fire the work
+    // fire the work for num
     for (int i = 0; i < TYPE_NUM; i++)
     {
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_PRESS)
@@ -277,10 +253,28 @@ void processInput(GLFWwindow* window)
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_RELEASE)
             PRESS[i] = false;
     }
+    // fire the work for char
+    for (int i = 0; i < CHAR_TYPE_NUM; i++)
+    {
+        if (glfwGetKey(window, GLFW_KEY_A + i) == GLFW_PRESS)
+        {
+            // 只有按键按下瞬间会发射烟花(松开->按下)
+            if (!PRESS_CHAR[i] && firework_list.size() < MAX_FIREWORK_NUMBER)
+            {
+                fireworktype type = fireworktype(i+TYPE_NUM);
+                Firework newfirework(type);
+                firework_list.push_back(newfirework);
+                sound::fire();
+            }
+            PRESS_CHAR[i] = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A + i) == GLFW_RELEASE)
+            PRESS_CHAR[i] = false;
+    }
     // E Q 调整烟花速度
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         time_scale = (time_scale + 0.01f) > 4.0f ? 4.0f : (time_scale + 0.01f);
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
         time_scale = (time_scale - 0.01f) < 2.0f ? 2.0f : (time_scale - 0.01f);
     // mouse enable
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && MOUSEPRESS == false)
