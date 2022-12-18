@@ -9,7 +9,7 @@
 #include "camera.h"
 #include "model.h"
 #include "bloom.h"
-#include "draw.h"
+#include "particle_system.h"
 #include "firework.h"
 #include "skybox.h"
 #include "sound.h"
@@ -145,7 +145,7 @@ int main()
     Bloom bloom;
 
     // 加载烟花图元
-    Draw draw;
+    ParticleSystem draw;
 
     Skybox skybox;
 

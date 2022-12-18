@@ -1,6 +1,6 @@
 // Draw：渲染烟花
 
-#include "draw.h"
+#include "particle_system.h"
 #include "generate_vertices.h"
 
 void init_vertices()
@@ -9,7 +9,7 @@ void init_vertices()
     generate_cube_vertices(cube_vertices, cube_indices);
 }
 
-Draw::Draw()
+ParticleSystem::ParticleSystem()
 {
     init_vertices();
     glGenVertexArrays(POLYGON_NUM, VAO);
@@ -27,7 +27,7 @@ Draw::Draw()
     }
 }
 
-Draw::~Draw()
+ParticleSystem::~ParticleSystem()
 {
     glDeleteVertexArrays(POLYGON_NUM, VAO);
     glDeleteBuffers(POLYGON_NUM, VBO);
@@ -35,7 +35,7 @@ Draw::~Draw()
 }
 
 
-void Draw::draw_polygon(glm::vec3* position, GLint pos_cnt, GLfloat radius, glm::vec4 color, polygon type, Shader& myshader)
+void ParticleSystem::draw_polygon(glm::vec3* position, GLint pos_cnt, GLfloat radius, glm::vec4 color, polygon type, Shader& myshader)
 {
     glBindVertexArray(VAO[type]);
     // 渲染多个位置实现拖尾
@@ -56,7 +56,7 @@ void Draw::draw_polygon(glm::vec3* position, GLint pos_cnt, GLfloat radius, glm:
     }
 }
 
-void Draw::draw_firework(vector<Firework>::iterator fw, Shader& myshader)
+void ParticleSystem::draw_firework(vector<Firework>::iterator fw, Shader& myshader)
 {
     // 未爆炸：渲染一个几何体（烟花本体）
     if (!fw->isExploded())
@@ -64,9 +64,10 @@ void Draw::draw_firework(vector<Firework>::iterator fw, Shader& myshader)
     // 已爆炸：渲染多个几何体（烟花粒子）
     else
     {
+        Particle* baseParticlePtr = fw->getParticles();
         for (int i = 0; i < fw->getParticleNum(); i++)
         {
-            Particle* grain_ptr = fw->getParticles() + i;
+            Particle* grain_ptr = baseParticlePtr + i;
             // 粒子不透明度为0即寿命结束
             if (grain_ptr->getColor().w <= 0.0f)
                 continue;

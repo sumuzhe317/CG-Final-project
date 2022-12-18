@@ -35,41 +35,54 @@ public:
 
 private:
     // 烟花属性
-    GLboolean hasExploded;                                      // 是否已经爆炸
-    GLint position_cnt;                                         // 目前记录位置的数量，用于实现拖尾效果
-    glm::vec3 position[POSITION_NUMBER];                        // 记录位置的数组，用于实现拖尾效果
-    glm::vec3 velocity;                                         // 速度
-    glm::vec4 color;                                            // 颜色
-    GLfloat radius;                                             // 半径
-    polygon shape;                                              // 形状
-    fireworktype type;                                          // 爆炸类型
+    GLboolean hasExploded;                                      // whether explode
+    GLint position_cnt;                                         // position records
+    glm::vec3 position[POSITION_NUMBER];                        // position arrays
+    glm::vec3 velocity;                                         // speed
+    glm::vec4 color;                                            // color
+    GLfloat radius;                                             // radius
+    polygon shape;                                              // shape of particle
+    fireworktype type;                                          // shape of boom
 
     // 静态变量
-    static const GLfloat GRAVITY;                               // 烟花的重力加速度
-    static const GLfloat radiusScale;                           // 初始半径的缩放比例，用于适应世界范围
-    static const GLfloat velocityScale;                         // 初始速度的缩放比例，用于适应世界范围
-    static const GLfloat explodeScale;                          // 爆炸速度的缩放比例，用于适应世界范围
+    static const GLfloat GRAVITY;                               // g for firework
+    static const GLfloat radiusScale;                           // scale for radius
+    static const GLfloat velocityScale;                         // scale for speed
+    static const GLfloat explodeScale;                          // scale for explode speed
 
     // 粒子相关属性
-    static const GLint minParticleNum = 15;                     // 最小粒子数目的平方根
-    static const GLint maxParticleNum = 20;                     // 最大粒子数目的平方根
-    GLint particleNum;                                          // 粒子总数
-    GLint particleAliveNum;                                     // 存活的粒子数目(不透明度大于0)
-    Particle particles[maxParticleNum * maxParticleNum];        // 粒子
+    static const GLint minParticleNum = 15;                     // sqrt of minimum
+    static const GLint maxParticleNum = 20;                     // sqrt of maxnum
+    GLint particleNum;                                          // the sum of particle
+    GLint particleAliveNum;                                     // alive sum of particle
+    Particle particles[maxParticleNum * maxParticleNum];        // particle's records
 
     // 光照相关属性
-    GLfloat light_life;                                         // 光源寿命
-    GLfloat light_intensity;                                    // 光照强度
-    glm::vec3 light_color;                                      // 光源颜色
+    GLfloat light_life;                                         // light point's life
+    GLfloat light_intensity;                                    // light point's intensity
+    glm::vec3 light_color;                                      // light point's color
 
     // 球形烟花与随机球形烟花的粒子初始化
     glm::vec3 getSpherePoint(GLfloat, GLfloat);                 // 根据经纬在球上取点
-    glm::vec3 velocitySampleRandom();                           // 在球上随机采样
+    glm::vec3 velocitySampleRandom();                           // sample in the sphere
     void velocitySample(GLuint Longitude, GLuint Latitude,
-        std::vector<glm::vec3>& vertexes);                      // 在球上均匀采样
+        std::vector<glm::vec3>& vertexes);                      // sample in the sphere
 
     // 其他类型烟花的粒子初始化
     void initialise_particles();
+
+
+    // 通用更新
+    void posUpdate(float timeScale);
+
+    // 通用初始化
+    glm::vec3 velocityInitRandom();
+    GLfloat radiusInitRandom(GLfloat start, GLfloat gap);
+    glm::vec3 xyzColorInitRandom();
+    GLuint particleNumInitRandom();
+    GLfloat explodeSpeedInitRandom();
+
+    glm::vec3 posInit();
 
     // XYZ与RGB空间互换
     glm::vec3 rgb2xyz(glm::vec3);

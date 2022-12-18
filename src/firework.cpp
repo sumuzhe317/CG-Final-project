@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "sound.h"
 #include <irrklang/irrKlang.h>
+
 // const GLfloat Firework::GRAVITY = -0.25f;
 const GLfloat Firework::GRAVITY = -9.8f;
 const GLfloat Firework::radiusScale = 250.0f;
@@ -31,31 +32,22 @@ void Firework::initialise(fireworktype ftype)
 
     // 初始位置 0.0f, 45.0f, -110.0f
     position_cnt = 1;
-    position[POSITION_NUMBER - 1] = glm::vec3(0.0f, 45.0f, -110.0f);
+    position[POSITION_NUMBER - 1] = posInit();
 
     // 随机初始速度
-    velocity = glm::vec3(
-        // x轴方向限制在 [-0.3,0.3] * velocityScale
-        -0.3 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.6))),
-        // y轴方向限制在 [0.78,0.98] * velocityScale
-        0.78 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.2))),
-        // z轴方向限制在 [-0.1,0.1] * velocityScale
-        -0.1 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.2)))
-    );
+    velocity = velocityInitRandom();
     velocity *= Firework::velocityScale;
 
     // 半径限制在 [0.003,0.004] * radiusScale
-    radius = 0.003f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.001f)));
+    radius = radiusInitRandom(0.003,0.001);
     radius *= Firework::radiusScale;
+
+
     particleNum = 0;
     particleAliveNum = 0;
 
     // 生成一定范围内的随机颜色
-    glm::vec3 xyz(
-        0.4273033440113067627f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.639719843864440918f - 0.4273033440113067627f))),
-        0.218611598014831543f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.7708090543746948242f - 0.218611598014831543f))),
-        0.0975274890661239624f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.8590958118438720703f - 0.0975274890661239624f)))
-    );
+    glm::vec3 xyz = xyzColorInitRandom();
     color = glm::vec4(
         xyz2rgb(xyz),
         1.0f
@@ -67,21 +59,16 @@ void Firework::initialise(fireworktype ftype)
 
 void Firework::move(float dt)
 {
-    // 已爆炸：对粒子应用物理定律
+    // exploded -> call explode func
     if (this->isExploded())
     {
         this->explode(dt);
     }
-    // 未爆炸：对烟花应用物理定律
+    // not exploded -> call update
     else
     {
         // 更新位置及历史位置
-        position_cnt = position_cnt + 1 < POSITION_NUMBER ? position_cnt + 1 : POSITION_NUMBER;
-        for (int i = 0; i < POSITION_NUMBER - 1; i++)
-        {
-            this->position[i] = this->position[i + 1];
-        }
-        position[POSITION_NUMBER - 1] += (velocity * dt);
+        posUpdate(dt);
 
         // 更新速度
         velocity.y += (Firework::GRAVITY * dt);
@@ -89,6 +76,7 @@ void Firework::move(float dt)
         // 更新后若y方向速度为小于0，爆炸产生粒子
         if (velocity.y <= 0.0f)
         {
+            // 爆炸音效
             sound::boom();
             velocity.y = 0;
             velocity *= 0.3;
@@ -104,7 +92,7 @@ void Firework::move(float dt)
             if (type == mudan_t || type == mudan_random_t)
             {
                 // 粒子数量随机
-                particleNum = minParticleNum + (rand() % static_cast<int>(maxParticleNum - minParticleNum + 1));
+                particleNum = particleNumInitRandom();
                 particleAliveNum = particleNum * particleNum;
 
                 // 球形烟花：单位球均匀采样得到速度
@@ -113,7 +101,7 @@ void Firework::move(float dt)
                     velocitySample(particleNum, particleNum, velSample);
 
                 // 爆炸速度限制在 [0.1,0.12] * explodeScale
-                GLfloat explosion_speed = Firework::explodeScale * (0.10f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.02))));
+                GLfloat explosion_speed = Firework::explodeScale * explodeSpeedInitRandom();
 
                 for (int i = 0; i < particleNum * particleNum; i++)
                 {
@@ -128,18 +116,14 @@ void Firework::move(float dt)
                         particles[i].setVelocity(velocitySampleRandom() * explosion_speed + velocity);
 
                     // 粒子颜色为随机取样后再乘以原烟花颜色
-                    glm::vec3 xyz(
-                        0.4273033440113067627f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.639719843864440918f - 0.4273033440113067627f))),
-                        0.218611598014831543f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.7708090543746948242f - 0.218611598014831543f))),
-                        0.0975274890661239624f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.8590958118438720703f - 0.0975274890661239624f)))
-                    );
+                    glm::vec3 xyz = xyzColorInitRandom();
                     glm::vec4 particleColor = glm::vec4(xyz2rgb(xyz), 1.0f) * color;
                     particleColor.a = 1.0f;
                     particles[i].setColor(particleColor);
 
                     // 粒子半径限制在 [0.002,0.003] * radiusScale
                     particles[i].setRadius(
-                        Firework::radiusScale * (0.002f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.001))))
+                        Firework::radiusScale * radiusInitRandom(0.002,0.001)
                     );
                     particles[i].setShape(shape);
                 }
@@ -190,7 +174,7 @@ void Firework::initialise_particles()
     particleAliveNum = vertices_num[type];
 
     // 爆炸速度限制在 [0.1,0.12] * explodeScale
-    GLfloat explosion_speed = Firework::explodeScale * (0.10f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.02))));
+    GLfloat explosion_speed = Firework::explodeScale * explodeSpeedInitRandom();
 
     for (int i = 0; i < particleNum; i++)
     {
@@ -202,18 +186,14 @@ void Firework::initialise_particles()
         particles[i].setVelocity(explosion_speed * glm::vec3(vertices_arr[type][i * 3], vertices_arr[type][i * 3 + 1], vertices_arr[type][i * 3 + 2]) + velocity);
 
         // 粒子颜色为随机取样后再乘以原烟花颜色
-        glm::vec3 xyz(
-            0.4273033440113067627f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.639719843864440918f - 0.4273033440113067627f))),
-            0.218611598014831543f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.7708090543746948242f - 0.218611598014831543f))),
-            0.0975274890661239624f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.8590958118438720703f - 0.0975274890661239624f)))
-        );
+        glm::vec3 xyz = xyzColorInitRandom();
         glm::vec4 particleColor = glm::vec4(xyz2rgb(xyz), 1.0f) * color;
         particleColor.a = 1.0f;
         particles[i].setColor(particleColor);
 
         // 粒子半径限制在 [0.002,0.003] * radiusScale
         particles[i].setRadius(
-            Firework::radiusScale * (0.002f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.001))))
+            Firework::radiusScale * radiusInitRandom(0.002,0.001)
         );
         particles[i].setShape(shape);
     }
@@ -250,6 +230,51 @@ glm::vec3 Firework::velocitySampleRandom()
     ));
 }
 
+void Firework::posUpdate(float dt){
+    position_cnt = position_cnt + 1 < POSITION_NUMBER ? position_cnt + 1 : POSITION_NUMBER;
+    for (int i = 0; i < POSITION_NUMBER - 1; i++)
+    {
+        this->position[i] = this->position[i + 1];
+    }
+    position[POSITION_NUMBER - 1] += (velocity * dt);
+}
+
+glm::vec3 Firework::velocityInitRandom()
+{
+    return glm::vec3(
+        // x轴方向限制在 [-0.3,0.3] * velocityScale
+        -0.3 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.6))),
+        // y轴方向限制在 [0.78,0.98] * velocityScale
+        0.78 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.2))),
+        // z轴方向限制在 [-0.1,0.1] * velocityScale
+        -0.1 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.2)))
+    );
+}
+
+GLfloat Firework::radiusInitRandom(GLfloat start, GLfloat gap){
+    return start + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (gap)));
+}
+
+glm::vec3 Firework::xyzColorInitRandom(){
+    return glm::vec3(
+        0.4273033440113067627f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.639719843864440918f - 0.4273033440113067627f))),
+        0.218611598014831543f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.7708090543746948242f - 0.218611598014831543f))),
+        0.0975274890661239624f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.8590958118438720703f - 0.0975274890661239624f)))
+    );
+}
+
+GLuint Firework::particleNumInitRandom(){
+    return minParticleNum + (rand() % static_cast<int>(maxParticleNum - minParticleNum + 1));
+}
+
+glm::vec3 Firework::posInit()
+{
+    return glm::vec3(0.0f, 45.0f, -110.0f);
+}
+
+GLfloat Firework::explodeSpeedInitRandom(){
+    return (0.10f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.02))));
+}
 glm::vec3 Firework::rgb2xyz(glm::vec3 rgb)
 {
     rgb.r > 0.04045f ? rgb.r = pow(((rgb.r + 0.055f) / 1.055f), 2.4f) : rgb.r /= 12.92f;

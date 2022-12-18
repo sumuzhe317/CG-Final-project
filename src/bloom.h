@@ -1,7 +1,7 @@
 // Bloom：进行辉光处理
 
-#ifndef __SHADING_H__
-#define __SHADING_H__
+#ifndef __BLOOM_H__
+#define __BLOOM_H__
 
 #include "shader.h"
 

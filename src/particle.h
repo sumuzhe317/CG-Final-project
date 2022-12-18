@@ -25,7 +25,7 @@ public:
     Particle();
     ~Particle();
 
-    // 获取粒子的各种属性
+    // get the information
     GLint getPositionCnt();
     glm::vec3 getPosition();
     glm::vec3* getPositionArr();
