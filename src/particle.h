@@ -10,7 +10,8 @@
 using namespace std;
 
 const uint32_t TYPE_NUM = 7;      // 爆炸类型数目
-const uint32_t CHAR_TYPE_NUM = 3; // 字母爆炸烟花数量
+const uint32_t CHAR_TYPE_NUM = 26; // 字母爆炸烟花数量
+const uint32_t MY_TYPE_NUM = 26; // 自定义烟花数量
 #define POLYGON_NUM 2             // 形状数目
 #define POSITION_NUMBER 4         // 拖尾粒子数量，越多拖尾越明显
 #define MAX_FIREWORK_NUMBER 20    // 最多烟花个数
@@ -32,7 +33,32 @@ enum fireworktype
     bird_t,
     my_test,
     my_heart,
-    CHAR_A
+    CHAR_A,
+    CHAR_B,
+    CHAR_C,
+    CHAR_D,
+    CHAR_E,
+    CHAR_F,
+    CHAR_G,
+    CHAR_H,
+    CHAR_I,
+    CHAR_J,
+    CHAR_K,
+    CHAR_L,
+    CHAR_M,
+    CHAR_N,
+    CHAR_O,
+    CHAR_P,
+    CHAR_Q,
+    CHAR_R,
+    CHAR_S,
+    CHAR_T,
+    CHAR_U,
+    CHAR_V,
+    CHAR_W,
+    CHAR_X,
+    CHAR_Y,
+    CHAR_Z
 };
 
 class Particle

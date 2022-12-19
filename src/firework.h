@@ -8,11 +8,12 @@
 class Firework
 {
 public:
-    Firework(fireworktype ftype);                               // 根据爆炸类型初始化烟花
+    Firework(fireworktype ftype,glm::vec3 start=glm::vec3(0.0f, 60.0f, -200.0f));                               // 根据爆炸类型初始化烟花
     ~Firework();                                                // 销毁烟花
 
     // 烟花引擎
     void initialise(fireworktype ftype);                        // 随机初始化烟花属性
+    void my_initialise(fireworktype ftype,glm::vec3 start);                        // 随机初始化烟花属性
     void move(float);                                           // 烟花运动的物理模型
     void explode(float);                                        // 粒子爆炸的物理模型
 

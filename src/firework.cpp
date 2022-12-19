@@ -15,8 +15,12 @@ const GLfloat Firework::velocityScale = 80.0f;
 const GLfloat Firework::explodeScale = 80.0f;
 
 
-Firework::Firework(fireworktype ftype)
+Firework::Firework(fireworktype ftype,glm::vec3 start)
 {
+    if (start != posInit()) {
+        my_initialise(type,start);
+        return;
+    }
     initialise(ftype);
 }
 
@@ -56,6 +60,37 @@ void Firework::initialise(fireworktype ftype)
     std::cout << "Initialised a firework." << std::endl;
 }
 
+void Firework::my_initialise(fireworktype ftype,glm::vec3 start)
+{
+    type = ftype;
+    shape = sphere_t;
+    hasExploded = false;
+
+    // 初始位置 0.0f, 45.0f, -110.0f
+    position_cnt = 1;
+    position[POSITION_NUMBER - 1] = start;
+
+    // 随机初始速度
+    velocity = velocityInitRandom();
+    velocity *= Firework::velocityScale;
+
+    // 半径限制在 [0.003,0.004] * radiusScale
+    radius = radiusInitRandom(0.003, 0.001);
+    radius *= Firework::radiusScale;
+
+
+    particleNum = 0;
+    particleAliveNum = 0;
+
+    // 生成一定范围内的随机颜色
+    glm::vec3 xyz = xyzColorInitRandom();
+    color = glm::vec4(
+        xyz2rgb(xyz),
+        1.0f
+    );
+
+    std::cout << "Initialised a firework." << std::endl;
+}
 
 void Firework::move(float dt)
 {
@@ -269,7 +304,7 @@ GLuint Firework::particleNumInitRandom(){
 
 glm::vec3 Firework::posInit()
 {
-    return glm::vec3(0.0f, 45.0f, -110.0f);
+    return glm::vec3(0.0f, 60.0f, -200.0f);
 }
 
 GLfloat Firework::explodeSpeedInitRandom(){

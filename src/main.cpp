@@ -31,12 +31,13 @@ vector<Firework> firework_list;
 // use to indentify the press button
 bool PRESS[TYPE_NUM] = { 0 };                                               // whether the 1~7 button is pressed
 bool PRESS_CHAR[CHAR_TYPE_NUM] = { 0 };                                               // whether the char button is pressed
+bool PRESS_MY[MY_TYPE_NUM] = {0};
 bool MOUSEPRESS = false;                                                    // whether press
 bool MOUSEABLE = false;                                                     // whether enable
 
 
 // camera
-Camera camera(glm::vec3(0.0f, 130.0f, -15.0f));
+Camera camera(glm::vec3(0.0f, 158.0f, -15.0f));
 //Camera camera(glm::vec3(0.0f, 1300.f, 110.0f));
 float NEAR = 0.1f;
 float FAR = 400.0f;
@@ -115,8 +116,6 @@ int main()
     // build and compile our shader zprogram
     // ------------------------------------
     Shader skyboxShader("shaders/skybox.vs", "shaders/skybox.fs");
-    //Shader lightingShader("shaders/5.2.light_casters.vs", "shaders/5.2.light_casters.fs");
-    //Shader lightCubeShader("shaders/6.light_cube.vs", "shaders/6.light_cube.fs");
     Shader ColorShader("shaders/Color.vs", "shaders/Color.fs");
     Shader BloomShader("shaders/Result.vs", "shaders/Bloom.fs");
     Shader ResultShader("shaders/Result.vs", "shaders/Result.fs");
@@ -141,7 +140,6 @@ int main()
 
     // 加载地面模型
     Model floor("resources/Japanese_Temple_Model/Japanese_Temple.obj");
-
     sound::init();
 
     // render loop
@@ -253,6 +251,33 @@ void processInput(GLFWwindow* window)
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_RELEASE)
             PRESS[i] = false;
     }
+    if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS)
+    {
+        fireworktype type;
+        // 只有按键按下瞬间会发射烟花(松开->按下)
+        if (!PRESS_MY[7] && firework_list.size() < MAX_FIREWORK_NUMBER)
+        {
+            type = fireworktype('s'-'a'+TYPE_NUM);
+            Firework newfirework1(type);
+            firework_list.push_back(newfirework1);
+            sound::fire();
+            type = fireworktype('y'-'a'+TYPE_NUM);
+            Firework newfirework2(type);
+            firework_list.push_back(newfirework2);
+            sound::fire();
+            type = fireworktype('s'-'a'+TYPE_NUM);
+            Firework newfirework3(type);
+            firework_list.push_back(newfirework3);
+            sound::fire();
+            type = fireworktype('u'-'a'+TYPE_NUM);
+            Firework newfirework4(type);
+            firework_list.push_back(newfirework4);
+            sound::fire();
+        }
+        PRESS_MY[7] = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_8) == GLFW_RELEASE)
+        PRESS_MY[7] = false;
     // fire the work for char
     for (int i = 0; i < CHAR_TYPE_NUM; i++)
     {
@@ -271,7 +296,7 @@ void processInput(GLFWwindow* window)
         if (glfwGetKey(window, GLFW_KEY_A + i) == GLFW_RELEASE)
             PRESS_CHAR[i] = false;
     }
-    // E Q 调整烟花速度
+    // 上 下 调整烟花速度
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         time_scale = (time_scale + 0.01f) > 4.0f ? 4.0f : (time_scale + 0.01f);
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
@@ -296,14 +321,14 @@ void processInput(GLFWwindow* window)
     }
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
         MOUSEPRESS = false;
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+    // if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    //     camera.ProcessKeyboard(FORWARD, deltaTime);
+    // if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    //     camera.ProcessKeyboard(BACKWARD, deltaTime);
+    // if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    //     camera.ProcessKeyboard(LEFT, deltaTime);
+    // if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    //     camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
