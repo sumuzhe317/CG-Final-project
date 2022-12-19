@@ -26,8 +26,8 @@ private:
     void init_rectangle();
     void init_framebuffer();
     void init_Bloom();
-    void BloomShading(Shader& BlurShader);
-    void ResultShading(Shader& BlurShader);
+    void BloomShading(Shader& BloomShader);
+    void ResultShading(Shader& BloomShader);
 };
 
 
