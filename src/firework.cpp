@@ -18,7 +18,7 @@ const GLfloat Firework::explodeScale = 80.0f;
 Firework::Firework(fireworktype ftype,glm::vec3 start)
 {
     if (start != posInit()) {
-        my_initialise(type,start);
+        my_initialise(ftype,start);
         return;
     }
     initialise(ftype);
