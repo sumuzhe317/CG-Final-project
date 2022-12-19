@@ -52,6 +52,9 @@ float lastFrame = 0.0f;                                                     // i
 // lighting
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+// sound
+double volume = 0.1f;
+
 // skybox's images
 vector<std::string> faces
 {
@@ -140,7 +143,7 @@ int main()
 
     // 加载地面模型
     Model floor("resources/Japanese_Temple_Model/Japanese_Temple.obj");
-    sound::init();
+    sound::init(volume);
 
     // render loop
     // -----------

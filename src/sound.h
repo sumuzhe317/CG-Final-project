@@ -8,7 +8,7 @@
 extern irrklang::ISoundEngine* SoundEngine;
 
 namespace sound{
-    void init();
+    void init(double);
 
     void fire();
 
