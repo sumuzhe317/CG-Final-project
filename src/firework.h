@@ -8,7 +8,7 @@
 class Firework
 {
 public:
-    Firework(fireworktype ftype,glm::vec3 start=glm::vec3(0.0f, 60.0f, -200.0f));                               // 根据爆炸类型初始化烟花
+    Firework(fireworktype ftype);                               // 根据爆炸类型初始化烟花
     ~Firework();                                                // 销毁烟花
 
     // 烟花引擎

@@ -1,4 +1,4 @@
-// Blur Shading Fragment Shader (Gauss Blur)
+// Bloom Shading Fragment Shader (Gauss Blur)
 #version 330 core
 
 out vec4 FragColor;

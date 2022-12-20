@@ -37,10 +37,10 @@ bool MOUSEABLE = false;                                                     // w
 
 
 // camera
-Camera camera(glm::vec3(0.0f, 158.0f, -15.0f));
+Camera camera(glm::vec3(0.0f, 180.0f, -22.0f));
 //Camera camera(glm::vec3(0.0f, 1300.f, 110.0f));
 float NEAR = 0.1f;
-float FAR = 400.0f;
+float FAR = 800.0f;
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -123,6 +123,7 @@ int main()
     Shader BloomShader("shaders/Result.vs", "shaders/Bloom.fs");
     Shader ResultShader("shaders/Result.vs", "shaders/Result.fs");
     Shader FloorShader("shaders/Blinn_Phong.vs", "shaders/Blinn_Phong.fs");
+    Shader CastleShader("shaders/Blinn_Phong.vs", "shaders/Blinn_Phong.fs");
 
     // configure global opengl state
     // -----------------------------
@@ -142,7 +143,10 @@ int main()
     Skybox skybox;
 
     // 加载地面模型
-    Model floor("resources/Japanese_Temple_Model/Japanese_Temple.obj");
+    cout << "floor" << endl;
+    Model floor("resources/ground/uploads_files_3829365_church+floor.obj"); 
+    cout << "castle" << endl;
+    Model castle("resources/Japanese_Temple_Model/Japanese_Temple.obj");
     sound::init(volume);
 
     // render loop
@@ -200,13 +204,33 @@ int main()
         FloorShader.setMat4("view", view);
         FloorShader.setMat4("projection", projection);
         glm::mat4 floorTransform = glm::mat4(1.0f);
-        floorTransform = glm::scale(floorTransform, glm::vec3(5.0f));
-        floorTransform = glm::rotate(floorTransform, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        floorTransform = glm::scale(floorTransform, glm::vec3(200.0f));
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(0.0f, -200.0f, 0.0f));
+        floorTransform = trans * floorTransform;
+        floorTransform = glm::rotate(floorTransform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         FloorShader.setMat4("model", floorTransform);
         // send the light point
         set_point_light(FloorShader);
         // draw the floor
         floor.Draw(FloorShader);
+
+        // floor shader
+        CastleShader.use();
+        // set the MVP transformation
+        CastleShader.setMat4("view", view);
+        CastleShader.setMat4("projection", projection);
+        glm::mat4 castleTransform = glm::mat4(1.0f);
+        castleTransform = glm::scale(castleTransform, glm::vec3(7.0f));
+        trans = glm::mat4(1.0f);
+        //trans = glm::translate(trans, glm::vec3(0.0f, 0.0f, 0.0f));
+        //castleTransform = trans * castleTransform;
+        castleTransform = glm::rotate(castleTransform, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        CastleShader.setMat4("model", castleTransform);
+        // send the light point
+        set_point_light(CastleShader);
+        // draw the floor
+        castle.Draw(CastleShader);
         
         // draw skybox as last
         skyboxShader.use();

@@ -15,12 +15,8 @@ const GLfloat Firework::velocityScale = 80.0f;
 const GLfloat Firework::explodeScale = 80.0f;
 
 
-Firework::Firework(fireworktype ftype,glm::vec3 start)
+Firework::Firework(fireworktype ftype)
 {
-    if (start != posInit()) {
-        my_initialise(ftype,start);
-        return;
-    }
     initialise(ftype);
 }
 
@@ -304,7 +300,7 @@ GLuint Firework::particleNumInitRandom(){
 
 glm::vec3 Firework::posInit()
 {
-    return glm::vec3(0.0f, 60.0f, -200.0f);
+    return glm::vec3(0.0f, -130.0f, -300.0f);
 }
 
 GLfloat Firework::explodeSpeedInitRandom(){

@@ -20,6 +20,9 @@
 using namespace std;
 //从文件中读取纹理
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false);
+
+const char* texfile[] = {"1.jpg","2.jpg","3.jpg", "4.jpg","5.jpg","6.jpg","7.jpg" };
+int texcount = 0;
 //Model类
 class Model
 {
@@ -186,8 +189,9 @@ private:
 			if (!skip)
 			{   // 如果尚未加载纹理，请加载它
 				Texture texture;
+				cout << texcount << endl;
 				//texture.id = TextureFromFile(str.C_Str(), this->directory);
-				texture.id = TextureFromFile("Japanese_Temple_Paint2_Japanese_Shrine_Mat_AlbedoTransparency.png", this->directory);
+				texture.id = TextureFromFile(texfile[texcount++], this->directory);
 				texture.type = typeName;
 				texture.path = str.C_Str();
 				textures.push_back(texture);
