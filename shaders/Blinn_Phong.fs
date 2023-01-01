@@ -45,7 +45,7 @@ void main()
         vec3 result = light_list[i].Color * diff * color + vec3(specular);
         // attenuation (use quadratic as we have gamma correction)
         float distance = length(vs_out.FragPos - light_list[i].Position);
-        result *= 1.0 / (distance * distance);
+        result *= 1.0 / (1+distance+distance * distance);
 
         result *= light_list[i].intensity;
         lighting += result;
