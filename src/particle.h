@@ -9,7 +9,7 @@
 #include "explode_shape.h"
 using namespace std;
 
-const uint32_t TYPE_NUM = 7;      // 爆炸类型数目
+const uint32_t TYPE_NUM = 4;      // 爆炸类型数目
 const uint32_t CHAR_TYPE_NUM = 26; // 字母爆炸烟花数量
 const uint32_t MY_TYPE_NUM = 26; // 自定义烟花数量
 #define POLYGON_NUM 2             // 形状数目

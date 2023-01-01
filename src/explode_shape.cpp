@@ -1780,7 +1780,7 @@ float my_sysucg_vertices[] = {
 //--------------------
 };
 
-float *vertices_arr[] = {nullptr, nullptr, diamond_vertices, heart_vertices, bird_vertices, my_vertices, my_heart_vertices, char_a_arr, char_b_arr,char_c_arr,char_d_arr,char_e_arr,char_f_arr,char_g_arr,char_h_arr,char_i_arr,char_j_arr,char_k_arr,char_l_arr,char_m_arr,char_n_arr,char_o_arr,char_p_arr,char_q_arr,char_r_arr,char_s_arr,char_t_arr,char_u_arr,char_v_arr,char_w_arr,char_x_arr,char_y_arr,char_z_arr};
+float *vertices_arr[] = {nullptr, nullptr, my_vertices, my_heart_vertices, char_a_arr, char_b_arr,char_c_arr,char_d_arr,char_e_arr,char_f_arr,char_g_arr,char_h_arr,char_i_arr,char_j_arr,char_k_arr,char_l_arr,char_m_arr,char_n_arr,char_o_arr,char_p_arr,char_q_arr,char_r_arr,char_s_arr,char_t_arr,char_u_arr,char_v_arr,char_w_arr,char_x_arr,char_y_arr,char_z_arr};
 
-int vertices_num[] = {0, 0, 198 / 3, 276 / 3, 1104 / 3, 303 / 3, 249 / 3, fsize(char_a_arr) , fsize(char_b_arr), fsize(char_c_arr) ,fsize(char_d_arr), fsize(char_e_arr),fsize(char_f_arr),fsize(char_g_arr),fsize(char_h_arr),fsize(char_i_arr),fsize(char_j_arr),fsize(char_k_arr),fsize(char_l_arr),fsize(char_m_arr),fsize(char_n_arr),fsize(char_o_arr),fsize(char_p_arr),fsize(char_q_arr),fsize(char_r_arr),fsize(char_s_arr),fsize(char_t_arr),fsize(char_u_arr),fsize(char_v_arr),fsize(char_w_arr),fsize(char_x_arr),fsize(char_y_arr),fsize(char_z_arr)};
+int vertices_num[] = {0, 0, 303 / 3, 249 / 3, fsize(char_a_arr) , fsize(char_b_arr), fsize(char_c_arr) ,fsize(char_d_arr), fsize(char_e_arr),fsize(char_f_arr),fsize(char_g_arr),fsize(char_h_arr),fsize(char_i_arr),fsize(char_j_arr),fsize(char_k_arr),fsize(char_l_arr),fsize(char_m_arr),fsize(char_n_arr),fsize(char_o_arr),fsize(char_p_arr),fsize(char_q_arr),fsize(char_r_arr),fsize(char_s_arr),fsize(char_t_arr),fsize(char_u_arr),fsize(char_v_arr),fsize(char_w_arr),fsize(char_x_arr),fsize(char_y_arr),fsize(char_z_arr)};
 // int vertices_num[] = { 0, 0, 317 / 3, 500 / 3, 2000 / 3 };

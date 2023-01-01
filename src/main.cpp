@@ -278,11 +278,11 @@ void processInput(GLFWwindow* window)
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_RELEASE)
             PRESS[i] = false;
     }
-    if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
     {
         fireworktype type;
         // 只有按键按下瞬间会发射烟花(松开->按下)
-        if (!PRESS_MY[7] && firework_list.size() < MAX_FIREWORK_NUMBER)
+        if (!PRESS_MY[5] && firework_list.size() < MAX_FIREWORK_NUMBER)
         {
             type = fireworktype('s'-'a'+TYPE_NUM);
             Firework newfirework1(type);
@@ -301,10 +301,10 @@ void processInput(GLFWwindow* window)
             firework_list.push_back(newfirework4);
             sound::fire();
         }
-        PRESS_MY[7] = true;
+        PRESS_MY[5] = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_8) == GLFW_RELEASE)
-        PRESS_MY[7] = false;
+    if (glfwGetKey(window, GLFW_KEY_5) == GLFW_RELEASE)
+        PRESS_MY[5] = false;
     // fire the work for char
     for (int i = 0; i < CHAR_TYPE_NUM; i++)
     {
